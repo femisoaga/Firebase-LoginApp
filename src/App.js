@@ -1,24 +1,40 @@
-import logo from './logo.svg';
-import './App.css';
+import Layout from "./Layout";
+import Login from "./Login";
+import Signup from "./SignUp";
+import Profile from "./Profile";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { auth } from "./firebase";
+import LoadingSpinner from "./LoadingSpinner";
 
 function App() {
+  const [authInitialized, setAuthInitialized] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+      setAuthInitialized(true);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (!authInitialized) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+    <Routes>
+        <Route path = "/" element = { <Layout></Layout> }>
+          <Route index element = {user ? <Profile></Profile>  : <Login></Login> }></Route>
+          <Route path = "/signup" element = { <Signup></Signup> } ></Route>
+          <Route path = "/profile" element = { user ? <Profile></Profile> : <Login></Login>  }></Route>
+          <Route path="/login" element={!user ? <Login/> : <Profile />} />
+        </Route>
+    </Routes>
+  </BrowserRouter>
   );
 }
 
